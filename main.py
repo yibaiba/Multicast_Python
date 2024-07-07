@@ -8,8 +8,8 @@ import tkinter as tk
 from queue import Queue
 from tkinter import messagebox, ttk
 
-from img.logo import imgBase64
 import ipTool
+from img.logo import imgBase64
 
 send_bytes = 0
 recv_bytes = 0
@@ -17,10 +17,8 @@ recv_queue = Queue()
 is_clearing_data = False
 exit_event = threading.Event()
 
-
 send_bytes_lock = threading.Lock()
 recv_bytes_lock = threading.Lock()
-
 
 send_sock = None
 recv_sock = None
@@ -126,7 +124,7 @@ def start_threads():
 
 
 def bind_multicast():
-    global recv_bytes, recv_queue,is_multicast_bound
+    global recv_bytes, recv_queue, is_multicast_bound
     recv_bytes = 0
     recv_queue.queue.clear()
     multicast_group = multicast_group_entry.get()
@@ -137,6 +135,7 @@ def bind_multicast():
         recv_thread = threading.Thread(target=receive_message, args=(multicast_group, multicast_port, local_ip, recv_bytes_label))
         recv_thread.start()
         is_multicast_bound = True
+
 
 def clear_bytes():
     global send_bytes, recv_bytes, is_clearing_data
@@ -150,10 +149,8 @@ def clear_bytes():
         send_bytes_label.config(text="发送字节: 0")
         recv_bytes_label.config(text="接收字节: 0")
     exit_event.set()
-    # Data has been cleared, resume receiving operations
+
     is_clearing_data = False
-
-
 
 
 def on_closing():
@@ -161,9 +158,6 @@ def on_closing():
     print('Exiting...')
     root.destroy()
     os._exit(0)
-
-
-
 
 
 def create_temp_logo():  # 处理图片
@@ -208,7 +202,7 @@ if __name__ == "__main__":
     message_entry.insert(0, 'Multicast message')
 
     tk.Label(root, text="本机IP地址:").grid(row=3, column=0, padx=10, pady=5)
-    local_ip_entry = ttk.Combobox(root,width=17)
+    local_ip_entry = ttk.Combobox(root, width=17)
     local_ip_entry.grid(row=3, column=1, padx=10, pady=5)
 
     tk.Label(root, text="发送次数:").grid(row=4, column=0, padx=10, pady=5)
