@@ -6,9 +6,10 @@ import threading
 import time
 import tkinter as tk
 from queue import Queue
-from tkinter import messagebox
+from tkinter import messagebox, ttk
 
 from img.logo import imgBase64
+import ipTool
 
 send_bytes = 0
 recv_bytes = 0
@@ -156,14 +157,27 @@ def on_closing():
     os._exit(0)
 
 
+
+
+
 def create_temp_logo():  # 处理图片
     def run():
         tmp = open("temp.ico", "wb+")  # 创建temp.ico临时文件
         tmp.write(base64.b64decode(imgBase64))  # 写入img的base64
         tmp.close()
-        root.wm_iconbitmap("temp.ico")  # 使用wm_iconbitmap引入创建的ico
+
         if os.path.exists("temp.ico"):
+            # 使用wm_iconbitmap引入创建的ico
+            root.wm_iconbitmap("temp.ico")
             os.remove("temp.ico")
+        ip = ipTool
+        local_ips = ip.get_host_ip()
+        if local_ips:
+            local_ip_entry['values'] = local_ips
+            local_ip_entry.set(local_ips[0])  # 设置第一个 IP 地址
+        for ip in local_ips:
+            print(f"本机IP地址: {ip}")
+        print(f"本机IP地址: {local_ips}")
 
     logo_thread = threading.Thread(target=run)
     logo_thread.start()
@@ -190,9 +204,8 @@ if __name__ == "__main__":
     message_entry.insert(0, 'Multicast message')
 
     tk.Label(root, text="本机IP地址:").grid(row=3, column=0, padx=10, pady=5)
-    local_ip_entry = tk.Entry(root)
+    local_ip_entry = ttk.Combobox(root,width=17)
     local_ip_entry.grid(row=3, column=1, padx=10, pady=5)
-    local_ip_entry.insert(0, '192.168.31.173')
 
     tk.Label(root, text="发送次数:").grid(row=4, column=0, padx=10, pady=5)
     send_count_entry = tk.Entry(root)
