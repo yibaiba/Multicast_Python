@@ -1,1 +1,1 @@
-pyinstaller -F -w -i cat.ico --name=Multicast.exe main.py
+pyinstaller -F -w -i ./img/cat.ico --name=Multicast.exe main.py

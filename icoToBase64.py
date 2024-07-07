@@ -4,7 +4,7 @@
 import base64
 import os
 
-open_icon = open("./cat.ico", "rb")
+open_icon = open("img/cat.ico", "rb")
 b64str = base64.b64encode(open_icon.read())  # 转换为base64编码
 open_icon.close()
 write_data = "imgBase64 = %s" % b64str
