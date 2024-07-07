@@ -1,12 +1,14 @@
+import base64
 import os
 import socket
 import struct
-import sys
 import threading
 import time
 import tkinter as tk
-from tkinter import messagebox
 from queue import Queue
+from tkinter import messagebox
+
+from img.logo import imgBase64
 
 send_bytes = 0
 recv_bytes = 0
@@ -154,9 +156,23 @@ def on_closing():
     os._exit(0)
 
 
+def create_temp_logo():  # 处理图片
+    def run():
+        tmp = open("temp.ico", "wb+")  # 创建temp.ico临时文件
+        tmp.write(base64.b64decode(imgBase64))  # 写入img的base64
+        tmp.close()
+        root.wm_iconbitmap("temp.ico")  # 使用wm_iconbitmap引入创建的ico
+        if os.path.exists("temp.ico"):
+            os.remove("temp.ico")
+
+    logo_thread = threading.Thread(target=run)
+    logo_thread.start()
+
+
 if __name__ == "__main__":
     root = tk.Tk()
-    root.title("组播测试工具 v1.7")
+    create_temp_logo()
+    root.title("组播测试工具 v1.8")
 
     tk.Label(root, text="组播组IP地址:").grid(row=0, column=0, padx=10, pady=5)
     multicast_group_entry = tk.Entry(root)
