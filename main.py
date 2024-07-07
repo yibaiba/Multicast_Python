@@ -157,7 +157,7 @@ def on_closing():
 
 if __name__ == "__main__":
     root = tk.Tk()
-    root.title("组播测试工具_v1.5")
+    root.title("组播测试工具 v1.7")
 
     tk.Label(root, text="组播组IP地址:").grid(row=0, column=0, padx=10, pady=5)
     multicast_group_entry = tk.Entry(root)
@@ -201,6 +201,7 @@ if __name__ == "__main__":
 
     clear_button = tk.Button(root, text="清除数据", command=clear_bytes)
     clear_button.grid(row=9, column=0, columnspan=2, pady=10)
+
 
     root.after(100, process_queue)  # Start processing the queue
     root.protocol("WM_DELETE_WINDOW", on_closing)
