@@ -1,5 +1,7 @@
+import os
 import socket
 import struct
+import sys
 import threading
 import time
 import tkinter as tk
@@ -34,15 +36,14 @@ def send_message(multicast_group, multicast_port, message, local_ip, send_count,
         for _ in range(send_count):
             if exit_event.is_set():
                 break
-
-            time.sleep(0.02)
-            sent = send_sock.sendto(message.encode(), (multicast_group, multicast_port))
-            with send_bytes_lock:
-                send_bytes += len(message.encode())
+            # Send data to the multicast group
+            time.sleep(0.02)  # Add a small delay to avoid flooding the network
+            _ = send_sock.sendto(message.encode(), (multicast_group, multicast_port))
+            with send_bytes_lock:  # Acquire lock before modifying send_bytes
+                send_bytes += len(message.encode())  # Correctly calculate the sent bytes
             send_bytes_label.config(text=f"发送字节: {send_bytes}")
             text_widget.insert(tk.END, f'发送数据: {message}\n')
-            text_widget.see(tk.END)
-            # print(f"Sent {len(message.encode())} bytes")
+            text_widget.see(tk.END)  # print(f"Sent {len(message.encode())} bytes")
 
     finally:
         print(f"Total sent bytes: {send_bytes}")
@@ -52,13 +53,13 @@ def send_message(multicast_group, multicast_port, message, local_ip, send_count,
 
 
 def update_recv_bytes_label():
-    # This function will be called in the main thread to safely update the GUI
+
     recv_bytes_label.config(text=f"接收字节: {recv_bytes}")
 
 
 def process_queue():
     while not recv_queue.empty():
-        data, addr = recv_queue.get()
+        data, _ = recv_queue.get()
         text_widget.insert(tk.END, f'收到数据: {data.decode()}\n')
         text_widget.see(tk.END)  # print(f"Received {len(data)} bytes from {addr}")  # Debugging information
     if recv_queue.empty():
@@ -109,14 +110,13 @@ def start_threads():
     message = message_entry.get()
     local_ip = local_ip_entry.get()
     send_count = int(send_count_entry.get())
-    send_bytes_label.config(text="发送字节: 0")
-    recv_bytes_label.config(text="接收字节: 0")
-
+    exit_event.clear()
     send_thread = threading.Thread(target=send_message, args=(multicast_group, multicast_port, message, local_ip, send_count, send_bytes_label, text_widget))
     recv_thread = threading.Thread(target=receive_message, args=(multicast_group, multicast_port, local_ip, recv_bytes_label))
-
     send_thread.start()
     recv_thread.start()
+    send_bytes_label.config(text="发送字节: 0")
+    recv_bytes_label.config(text="接收字节: 0")
 
 
 def clear_bytes():
@@ -130,6 +130,7 @@ def clear_bytes():
         recv_queue.queue.clear()
         send_bytes_label.config(text="发送字节: 0")
         recv_bytes_label.config(text="接收字节: 0")
+    exit_event.set()
     # Data has been cleared, resume receiving operations
     is_clearing_data = False
 
@@ -149,7 +150,9 @@ def bind_multicast():
 
 def on_closing():
     exit_event.set()
+    print('Exiting...')
     root.destroy()
+    os._exit(0)
 
 
 if __name__ == "__main__":
