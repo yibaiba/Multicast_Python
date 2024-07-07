@@ -124,7 +124,8 @@ def start_threads():
 
 
 def bind_multicast():
-    global recv_bytes, recv_queue, is_multicast_bound
+    global send_bytes, recv_bytes, recv_queue, is_multicast_bound
+    send_bytes = 0
     recv_bytes = 0
     recv_queue.queue.clear()
     multicast_group = multicast_group_entry.get()
@@ -148,7 +149,6 @@ def clear_bytes():
         recv_queue.queue.clear()
         send_bytes_label.config(text="发送字节: 0")
         recv_bytes_label.config(text="接收字节: 0")
-    exit_event.set()
 
     is_clearing_data = False
 
@@ -173,6 +173,10 @@ def create_temp_logo():  # 处理图片
 
     logo_thread = threading.Thread(target=run)
     logo_thread.start()
+
+
+def stop_threads():
+    exit_event.set()
 
 
 def update_combobox_values(combobox, values):
@@ -224,17 +228,17 @@ if __name__ == "__main__":
     local_ip_entry = ttk.Combobox(root, width=17)
     local_ip_entry.grid(row=3, column=1, padx=10, pady=5)
 
-
     tk.Label(root, text="发送次数:").grid(row=4, column=0, padx=10, pady=5)
     send_count_entry = tk.Entry(root)
     send_count_entry.grid(row=4, column=1, padx=10, pady=5)
     send_count_entry.insert(0, '1000')
 
-    start_button = tk.Button(root, text="发送", command=start_threads)
-    start_button.grid(row=5, column=0, columnspan=10, pady=5)
-
     bind_button = tk.Button(root, text="绑定组播", command=bind_multicast)
-    bind_button.grid(row=5, column=1, columnspan=10, pady=5)
+    bind_button.grid(row=5, column=1, columnspan=2, pady=5, )
+    start_button = tk.Button(root, text=" 发送 ", command=start_threads)
+    start_button.grid(row=6, column=0, columnspan=5, pady=5, )
+    stop_button = tk.Button(root, text="停止发送", command=stop_threads)
+    stop_button.grid(row=6, column=1, columnspan=1, pady=5, )
 
     text_widget = tk.Text(root, height=10, width=50)
     text_widget.grid(row=7, column=0, columnspan=2, padx=10, pady=5)
