@@ -17,13 +17,15 @@ recv_queue = Queue()
 is_clearing_data = False
 exit_event = threading.Event()
 
-# Initialize locks
+
 send_bytes_lock = threading.Lock()
 recv_bytes_lock = threading.Lock()
 
-# Global socket variables
+
 send_sock = None
 recv_sock = None
+
+is_multicast_bound = False
 
 
 def send_message(multicast_group, multicast_port, message, local_ip, send_count, send_bytes_label, text_widget):
@@ -103,7 +105,7 @@ def receive_message(multicast_group, multicast_port, local_ip, recv_bytes_label)
 
 
 def start_threads():
-    global send_bytes, recv_bytes, recv_queue
+    global send_bytes, recv_bytes, recv_queue, is_multicast_bound
     send_bytes = 0
     recv_bytes = 0
     recv_queue.queue.clear()
@@ -114,12 +116,27 @@ def start_threads():
     send_count = int(send_count_entry.get())
     exit_event.clear()
     send_thread = threading.Thread(target=send_message, args=(multicast_group, multicast_port, message, local_ip, send_count, send_bytes_label, text_widget))
-    recv_thread = threading.Thread(target=receive_message, args=(multicast_group, multicast_port, local_ip, recv_bytes_label))
     send_thread.start()
-    recv_thread.start()
+    if not is_multicast_bound:
+        recv_thread = threading.Thread(target=receive_message, args=(multicast_group, multicast_port, local_ip, recv_bytes_label))
+        recv_thread.start()
+        is_multicast_bound = True
     send_bytes_label.config(text="发送字节: 0")
     recv_bytes_label.config(text="接收字节: 0")
 
+
+def bind_multicast():
+    global recv_bytes, recv_queue,is_multicast_bound
+    recv_bytes = 0
+    recv_queue.queue.clear()
+    multicast_group = multicast_group_entry.get()
+    multicast_port = int(multicast_port_entry.get())
+    local_ip = local_ip_entry.get()
+    recv_bytes_label.config(text="接收字节: 0")
+    if not is_multicast_bound:
+        recv_thread = threading.Thread(target=receive_message, args=(multicast_group, multicast_port, local_ip, recv_bytes_label))
+        recv_thread.start()
+        is_multicast_bound = True
 
 def clear_bytes():
     global send_bytes, recv_bytes, is_clearing_data
@@ -137,17 +154,6 @@ def clear_bytes():
     is_clearing_data = False
 
 
-def bind_multicast():
-    global recv_bytes, recv_queue
-    recv_bytes = 0
-    recv_queue.queue.clear()
-    multicast_group = multicast_group_entry.get()
-    multicast_port = int(multicast_port_entry.get())
-    local_ip = local_ip_entry.get()
-    recv_bytes_label.config(text="接收字节: 0")
-
-    recv_thread = threading.Thread(target=receive_message, args=(multicast_group, multicast_port, local_ip, recv_bytes_label))
-    recv_thread.start()
 
 
 def on_closing():
@@ -174,10 +180,8 @@ def create_temp_logo():  # 处理图片
         local_ips = ip.get_host_ip()
         if local_ips:
             local_ip_entry['values'] = local_ips
-            local_ip_entry.set(local_ips[0])  # 设置第一个 IP 地址
-        for ip in local_ips:
-            print(f"本机IP地址: {ip}")
-        print(f"本机IP地址: {local_ips}")
+            if len(local_ips) > 0:
+                local_ip_entry.current(1)  # 设置第二个 IP 地址
 
     logo_thread = threading.Thread(target=run)
     logo_thread.start()
@@ -186,7 +190,7 @@ def create_temp_logo():  # 处理图片
 if __name__ == "__main__":
     root = tk.Tk()
     create_temp_logo()
-    root.title("组播测试工具 v1.8")
+    root.title("组播测试工具 v2.0")
 
     tk.Label(root, text="组播组IP地址:").grid(row=0, column=0, padx=10, pady=5)
     multicast_group_entry = tk.Entry(root)
