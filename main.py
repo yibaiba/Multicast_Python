@@ -34,17 +34,18 @@ def send_message(multicast_group, multicast_port, message, local_ip, send_count,
         for _ in range(send_count):
             if exit_event.is_set():
                 break
-            # Send data to the multicast group
-            time.sleep(0.02)  # Add a small delay to avoid flooding the network
+
+            time.sleep(0.02)
             sent = send_sock.sendto(message.encode(), (multicast_group, multicast_port))
-            with send_bytes_lock:  # Acquire lock before modifying send_bytes
-                send_bytes += len(message.encode())  # Correctly calculate the sent bytes
+            with send_bytes_lock:
+                send_bytes += len(message.encode())
             send_bytes_label.config(text=f"发送字节: {send_bytes}")
             text_widget.insert(tk.END, f'发送数据: {message}\n')
-            text_widget.see(tk.END)  # print(f"Sent {len(message.encode())} bytes")
+            text_widget.see(tk.END)
+            # print(f"Sent {len(message.encode())} bytes")
 
     finally:
-        print(f"Total sent bytes: {send_bytes}")  # Debugging information
+        print(f"Total sent bytes: {send_bytes}")
         print('Closing send socket')
         send_sock.close()
         send_sock = None
@@ -61,12 +62,12 @@ def process_queue():
         text_widget.insert(tk.END, f'收到数据: {data.decode()}\n')
         text_widget.see(tk.END)  # print(f"Received {len(data)} bytes from {addr}")  # Debugging information
     if recv_queue.empty():
-        root.after(100, process_queue)  # Schedule the next processing
+        root.after(100, process_queue)
 
 
 def receive_message(multicast_group, multicast_port, local_ip, recv_bytes_label):
     global recv_bytes, is_clearing_data, recv_sock
-    # Create the datagram socket for receiving if not already created
+    # 防止重复创建接收socket
     if recv_sock is None:
         recv_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         recv_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
