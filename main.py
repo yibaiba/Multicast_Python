@@ -53,7 +53,6 @@ def send_message(multicast_group, multicast_port, message, local_ip, send_count,
 
 
 def update_recv_bytes_label():
-
     recv_bytes_label.config(text=f"接收字节: {recv_bytes}")
 
 
@@ -201,7 +200,7 @@ if __name__ == "__main__":
 
     clear_button = tk.Button(root, text="清除数据", command=clear_bytes)
     clear_button.grid(row=9, column=0, columnspan=2, pady=10)
-
+    tk.Label(root, text="by: yibaiba").grid(row=9, column=1, padx=10, pady=5, sticky="se")
 
     root.after(100, process_queue)  # Start processing the queue
     root.protocol("WM_DELETE_WINDOW", on_closing)
