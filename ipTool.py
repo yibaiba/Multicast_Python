@@ -46,3 +46,6 @@ class IpTool:
             print('当前登录用户为中文无法正常获取ip地址,将使用其他方法获取')
             self.host_ip = get_host_ip()
             print(e)
+
+    def get_ip(self):
+        return self.host_ip

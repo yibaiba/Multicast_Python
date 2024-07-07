@@ -170,15 +170,34 @@ def create_temp_logo():  # 处理图片
             # 使用wm_iconbitmap引入创建的ico
             root.wm_iconbitmap("temp.ico")
             os.remove("temp.ico")
-        ip = ipTool
-        local_ips = ip.get_host_ip()
-        if local_ips:
-            local_ip_entry['values'] = local_ips
-            if len(local_ips) > 0:
-                local_ip_entry.current(1)  # 设置第二个 IP 地址
 
     logo_thread = threading.Thread(target=run)
     logo_thread.start()
+
+
+def update_combobox_values(combobox, values):
+    combobox['values'] = values
+
+
+def set_default_ip():
+    def run():
+        try:
+            ip = ipTool.IpTool()
+            local_ips = ip.get_ip()
+            # text_widget.insert(tk.END, f'收到数据: {local_ips}\n')
+            # text_widget.see(tk.END)
+            if local_ips:
+                def update_ips():
+                    local_ip_entry['values'] = local_ips
+                    if len(local_ips) > 0:
+                        local_ip_entry.current(1)
+
+                root.after(90, update_ips)
+        except Exception as e:
+            print(f"Error setting default IP: {e}")
+
+    set_ip_thread = threading.Thread(target=run)
+    set_ip_thread.start()
 
 
 if __name__ == "__main__":
@@ -204,6 +223,7 @@ if __name__ == "__main__":
     tk.Label(root, text="本机IP地址:").grid(row=3, column=0, padx=10, pady=5)
     local_ip_entry = ttk.Combobox(root, width=17)
     local_ip_entry.grid(row=3, column=1, padx=10, pady=5)
+
 
     tk.Label(root, text="发送次数:").grid(row=4, column=0, padx=10, pady=5)
     send_count_entry = tk.Entry(root)
@@ -231,4 +251,5 @@ if __name__ == "__main__":
 
     root.after(100, process_queue)  # Start processing the queue
     root.protocol("WM_DELETE_WINDOW", on_closing)
+    set_default_ip()
     root.mainloop()
