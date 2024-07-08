@@ -86,8 +86,7 @@ def receive_message(multicast_group, multicast_port, local_ip, recv_bytes_label)
     try:
         while not exit_event.is_set():
             data, addr = recv_sock.recvfrom(1024)
-            if is_clearing_data:
-                continue
+
             with recv_bytes_lock:
                 recv_bytes += len(data)
             recv_queue.put((data, addr))
@@ -113,10 +112,12 @@ def start_threads():
     local_ip = local_ip_entry.get()
     send_count = int(send_count_entry.get())
     exit_event.clear()
-    send_thread = threading.Thread(target=send_message, args=(multicast_group, multicast_port, message, local_ip, send_count, send_bytes_label, text_widget))
+    send_thread = threading.Thread(target=send_message, args=(
+    multicast_group, multicast_port, message, local_ip, send_count, send_bytes_label, text_widget))
     send_thread.start()
     if not is_multicast_bound:
-        recv_thread = threading.Thread(target=receive_message, args=(multicast_group, multicast_port, local_ip, recv_bytes_label))
+        recv_thread = threading.Thread(target=receive_message,
+                                       args=(multicast_group, multicast_port, local_ip, recv_bytes_label))
         recv_thread.start()
         is_multicast_bound = True
     send_bytes_label.config(text="发送字节: 0")
@@ -132,8 +133,10 @@ def bind_multicast():
     multicast_port = int(multicast_port_entry.get())
     local_ip = local_ip_entry.get()
     recv_bytes_label.config(text="接收字节: 0")
+    exit_event.clear()
     if not is_multicast_bound:
-        recv_thread = threading.Thread(target=receive_message, args=(multicast_group, multicast_port, local_ip, recv_bytes_label))
+        recv_thread = threading.Thread(target=receive_message,
+                                       args=(multicast_group, multicast_port, local_ip, recv_bytes_label))
         recv_thread.start()
         is_multicast_bound = True
 
@@ -141,16 +144,12 @@ def bind_multicast():
 def clear_bytes():
     global send_bytes, recv_bytes, is_clearing_data
 
-    is_clearing_data = True
-
     with send_bytes_lock, recv_bytes_lock:
         send_bytes = 0
         recv_bytes = 0
         recv_queue.queue.clear()
         send_bytes_label.config(text="发送字节: 0")
         recv_bytes_label.config(text="接收字节: 0")
-
-    is_clearing_data = False
 
 
 def on_closing():
@@ -176,7 +175,12 @@ def create_temp_logo():  # 处理图片
 
 
 def stop_threads():
-    exit_event.set()
+    global is_multicast_bound
+    if is_multicast_bound:
+        exit_event.set()
+        is_multicast_bound = False
+
+
 
 
 def update_combobox_values(combobox, values):
