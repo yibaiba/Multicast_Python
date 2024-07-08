@@ -100,18 +100,24 @@ def receive_message(multicast_group, multicast_port, local_ip, recv_bytes_label)
         recv_sock.close()
         recv_sock = None
 
-
-def start_threads():
-    global send_bytes, recv_bytes, recv_queue, is_multicast_bound
+def reset_counters_and_queue():
+    global send_bytes, recv_bytes, recv_queue
     send_bytes = 0
     recv_bytes = 0
     recv_queue.queue.clear()
+    exit_event.clear()
+    recv_bytes_label.config(text="接收字节: 0")
+    send_bytes_label.config(text="发送字节: 0")
+
+
+def start_threads():
+    global send_bytes, recv_bytes, recv_queue, is_multicast_bound
+    reset_counters_and_queue()
     multicast_group = multicast_group_entry.get()
     multicast_port = int(multicast_port_entry.get())
     message = message_entry.get()
     local_ip = local_ip_entry.get()
     send_count = int(send_count_entry.get())
-    exit_event.clear()
     send_thread = threading.Thread(target=send_message, args=(
     multicast_group, multicast_port, message, local_ip, send_count, send_bytes_label, text_widget))
     send_thread.start()
@@ -120,20 +126,16 @@ def start_threads():
                                        args=(multicast_group, multicast_port, local_ip, recv_bytes_label))
         recv_thread.start()
         is_multicast_bound = True
-    send_bytes_label.config(text="发送字节: 0")
-    recv_bytes_label.config(text="接收字节: 0")
 
 
 def bind_multicast():
     global send_bytes, recv_bytes, recv_queue, is_multicast_bound
-    send_bytes = 0
-    recv_bytes = 0
-    recv_queue.queue.clear()
+
     multicast_group = multicast_group_entry.get()
     multicast_port = int(multicast_port_entry.get())
     local_ip = local_ip_entry.get()
-    recv_bytes_label.config(text="接收字节: 0")
-    exit_event.clear()
+    reset_counters_and_queue()
+
     if not is_multicast_bound:
         recv_thread = threading.Thread(target=receive_message,
                                        args=(multicast_group, multicast_port, local_ip, recv_bytes_label))
