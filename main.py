@@ -114,8 +114,6 @@ def reset_counters_and_queue():
     global send_bytes, recv_bytes, recv_queue, recv_scok, send_sock
     send_bytes = 0
     recv_bytes = 0
-    recv_scok = None
-    send_sock = None
     recv_queue.queue.clear()
     exit_event.clear()
     recv_bytes_label.config(text="接收字节: 0")
