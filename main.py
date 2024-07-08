@@ -162,6 +162,7 @@ def clear_bytes():
         recv_queue.queue.clear()
         send_bytes_label.config(text="发送字节: 0")
         recv_bytes_label.config(text="接收字节: 0")
+        text_widget.delete(1.0, tk.END)
 
 
 def on_closing():
