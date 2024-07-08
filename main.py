@@ -30,10 +30,17 @@ def send_message(multicast_group, multicast_port, message, local_ip, send_count,
     global send_bytes, send_sock
     # Create the datagram socket for sending if not already created
     if send_sock is None:
+        # 创建UDP socket
         send_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        # Set the time-to-live for messages
-        ttl = struct.pack('b', 1)
-        send_sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, ttl)
+        # 设置端口复用
+        send_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
+        # 绑定本地地址
+        send_sock.bind(('', multicast_port))
+
+        # 设置组播出口网卡 非常重要
+        local_iface = socket.inet_aton(local_ip)
+        send_sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_IF, local_iface)
 
     try:
         for _ in range(send_count):
@@ -75,13 +82,15 @@ def receive_message(multicast_group, multicast_port, local_ip, recv_bytes_label)
         recv_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         recv_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         try:
-            recv_sock.bind((local_ip, multicast_port))
+            # 监听所有网卡
+            recv_sock.bind(("0.0.0.0", multicast_port))
         except Exception as e:
             messagebox.showerror("Error", f"绑定 {local_ip} 失败: {e}")
             return
-
-        mreq = struct.pack('4sL', socket.inet_aton(multicast_group), socket.INADDR_ANY)
+        # 关键 绑定本地网卡
+        mreq = struct.pack('4s4s', socket.inet_aton(multicast_group), socket.inet_aton(local_ip))
         recv_sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
+
 
     try:
         while not exit_event.is_set():
@@ -100,10 +109,13 @@ def receive_message(multicast_group, multicast_port, local_ip, recv_bytes_label)
         recv_sock.close()
         recv_sock = None
 
+
 def reset_counters_and_queue():
-    global send_bytes, recv_bytes, recv_queue
+    global send_bytes, recv_bytes, recv_queue, recv_scok, send_sock
     send_bytes = 0
     recv_bytes = 0
+    recv_scok = None
+    send_sock = None
     recv_queue.queue.clear()
     exit_event.clear()
     recv_bytes_label.config(text="接收字节: 0")
@@ -119,7 +131,7 @@ def start_threads():
     local_ip = local_ip_entry.get()
     send_count = int(send_count_entry.get())
     send_thread = threading.Thread(target=send_message, args=(
-    multicast_group, multicast_port, message, local_ip, send_count, send_bytes_label, text_widget))
+        multicast_group, multicast_port, message, local_ip, send_count, send_bytes_label, text_widget))
     send_thread.start()
     if not is_multicast_bound:
         recv_thread = threading.Thread(target=receive_message,
@@ -177,12 +189,10 @@ def create_temp_logo():  # 处理图片
 
 
 def stop_threads():
-    global is_multicast_bound
+    global is_multicast_bound,recv_sock,send_sock
     if is_multicast_bound:
         exit_event.set()
         is_multicast_bound = False
-
-
 
 
 def update_combobox_values(combobox, values):
