@@ -222,7 +222,7 @@ def set_default_ip():
 if __name__ == "__main__":
     root = tk.Tk()
     create_temp_logo()
-    root.title("组播测试工具 v2.0")
+    root.title("组播测试工具 v2.1")
 
     tk.Label(root, text="组播组IP地址:").grid(row=0, column=0, padx=10, pady=5)
     multicast_group_entry = tk.Entry(root)
